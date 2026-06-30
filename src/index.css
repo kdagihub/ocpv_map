@@ -3,7 +3,54 @@
 @tailwind utilities;
 
 body {
-  background-color: #f8fafc;
+  margin: 0;
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* AGRILINK — React Flow */
+.agrilink-flow .react-flow__pane {
+  cursor: grab;
+}
+
+.agrilink-flow .react-flow__pane:active {
+  cursor: grabbing;
+}
+
+.agrilink-flow .react-flow__node {
+  cursor: grab;
+}
+
+.agrilink-flow .react-flow__node.dragging {
+  cursor: grabbing;
+}
+
+.agrilink-flow .react-flow__node.dragging .agrilink-node-card {
+  box-shadow: 0 12px 40px rgba(249, 115, 22, 0.15);
+}
+
+.agrilink-flow .react-flow__edge-path {
+  stroke-linecap: round;
+}
+
+/* Libellés des flux toujours au-dessus des cartes */
+.agrilink-flow .react-flow__edgelabel-renderer {
+  z-index: 1000 !important;
+  pointer-events: none;
+}
+
+.agrilink-flow .react-flow__nodes {
+  z-index: 2;
+}
+
+.agrilink-edge-label {
+  position: relative;
+  z-index: 1001;
+}
+
+@keyframes agrilink-dash {
+  to { stroke-dashoffset: -24; }
 }
 
 @keyframes flow-pulse {
