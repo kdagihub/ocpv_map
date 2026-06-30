@@ -53,21 +53,8 @@ function AgrilinkLandingInner() {
       <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-[#121212] dark:text-white transition-colors duration-300 pt-[4.5rem]">
       <main className="relative z-10 max-w-7xl mx-auto px-6 pb-16">
         <section className="pt-8 pb-10 text-center">
-          <motion.div
-            custom={0}
-            variants={heroVariants}
-            initial="hidden"
-            animate="visible"
-            className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-500/10 border border-orange-500/30 mb-6"
-          >
-            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-            <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-orange-600 dark:text-orange-400">
-              Plateforme souveraine
-            </span>
-          </motion.div>
-
           <motion.h1
-            custom={1}
+            custom={0}
             variants={heroVariants}
             initial="hidden"
             animate="visible"
@@ -78,7 +65,7 @@ function AgrilinkLandingInner() {
           </motion.h1>
 
           <motion.p
-            custom={2}
+            custom={1}
             variants={heroVariants}
             initial="hidden"
             animate="visible"
@@ -90,7 +77,7 @@ function AgrilinkLandingInner() {
           </motion.p>
 
           <motion.div
-            custom={3}
+            custom={2}
             variants={heroVariants}
             initial="hidden"
             animate="visible"
