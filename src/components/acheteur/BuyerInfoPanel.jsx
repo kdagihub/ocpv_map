@@ -1,3 +1,4 @@
+import { createElement } from 'react';
 import {
   ShoppingCart,
   Wallet,
@@ -42,9 +43,9 @@ export default function BuyerInfoPanel() {
         <section>
           <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-white/40 mb-3">Parcours mockup</h2>
           <ul className="text-xs text-slate-600 dark:text-white/55 space-y-1.5 list-disc list-inside">
-            <li>Catalogue certifié · filtres région / hub / ville</li>
-            <li>Panier · favoris · paiement producteur</li>
-            <li>Upload preuve MM + référence → hub OCPV</li>
+            <li>Catalogue public · vérification visible · achat bloqué jusqu&apos;au contrôle</li>
+            <li>Panier · favoris · checkout unifié</li>
+            <li>Preuve MM producteur + taxes OCPV obligatoires sur une page</li>
             <li>Aucun match → intention d&apos;achat (textarea / voix)</li>
             <li>Transporteurs · contact direct hors plateforme</li>
             <li>Historique CP · APE · taxes</li>
@@ -56,12 +57,12 @@ export default function BuyerInfoPanel() {
           <div className="space-y-2">
             {[
               { icon: Package, title: 'Catalogue lots OCPV', detail: 'Lots tracés depuis la déclaration producteur jusqu\'à la vente.' },
-              { icon: Receipt, title: 'Preuve au hub', detail: 'PDF/image reçu MM + référence · timer 24 h (CDC §3.4).' },
+              { icon: Receipt, title: 'Reçu d’achat', detail: 'Émis après validation de la preuve P2P et des taxes OCPV, sans frais GUCE.' },
               { icon: Truck, title: 'Annuaire transporteurs', detail: 'Mise en relation · paiement fret hors plateforme.' },
               { icon: FileText, title: 'Reçus CP / APE', detail: 'Historique fiscal OCPV téléchargeable.' },
             ].map(({ icon: Icon, title, detail }) => (
               <div key={title} className="flex gap-3 p-3 rounded-xl bg-slate-50 dark:bg-[#121212] border border-slate-200 dark:border-white/10">
-                <Icon size={16} className="text-orange-500 shrink-0 mt-0.5" />
+                {createElement(Icon, { size: 16, className: 'text-orange-500 shrink-0 mt-0.5' })}
                 <div>
                   <h3 className="text-sm font-semibold text-slate-900 dark:text-white">{title}</h3>
                   <p className="text-xs text-slate-500 dark:text-white/50 mt-0.5">{detail}</p>

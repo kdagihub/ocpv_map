@@ -162,7 +162,7 @@ export const BOUNDED_CONTEXTS = {
       {
         title: 'Catalogue certifié',
         icon: Package,
-        detail: 'Lots contrôlés OCPV avec décote dynamique (Yield Management).',
+        detail: 'Lots visibles dès la déclaration ; achat activé après contrôle OCPV et décote exclusivement manuelle.',
       },
       {
         title: 'Paiement direct producteur',
@@ -170,9 +170,9 @@ export const BOUNDED_CONTEXTS = {
         detail: 'L’acheteur règle le producteur sur son compte Wave / OM / MTN — hors séquestre OCPV.',
       },
       {
-        title: 'Preuve de paiement au hub',
+        title: 'Checkout unifié',
         icon: Receipt,
-        detail: 'L’acheteur présente la preuve au Hub OCPV : enregistrement, taxes CP/APE, timer 24 h.',
+        detail: 'Preuve P2P producteur et taxes OCPV validées sur la même page avant émission du reçu d’achat.',
       },
       {
         title: 'Matchmaking IA par voix',

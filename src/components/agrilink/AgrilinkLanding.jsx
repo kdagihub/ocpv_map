@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { ReactFlowProvider } from '@xyflow/react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { Layers } from 'lucide-react';
+import { Building2, Layers } from 'lucide-react';
 
 import logoOcpv from '../../assets/logo_ocpv.png';
 import FlowCanvas from './FlowCanvas';
@@ -39,6 +39,13 @@ function AgrilinkLandingInner() {
           </div>
           <nav className="flex items-center gap-2">
             <ThemeToggle />
+            <Link
+              to="/dashboard-hub"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-500/10 border border-green-200 dark:border-green-500/20 transition-colors"
+            >
+              <Building2 size={13} />
+              <span className="hidden sm:inline">Agent Hub</span>
+            </Link>
             <Link
               to="/architecture-v1"
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-slate-500 dark:text-white/50 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 border border-transparent hover:border-slate-200 dark:hover:border-white/10 transition-colors"

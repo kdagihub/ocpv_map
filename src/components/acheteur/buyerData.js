@@ -46,6 +46,7 @@ export const CATALOGUE_LOTS = [
     mmNumber: '07 45 12 89 34',
     mmOperator: 'Wave',
     expiration: '25/06/2026',
+    status: 'available',
   },
   {
     id: 'lot-502',
@@ -61,6 +62,7 @@ export const CATALOGUE_LOTS = [
     mmNumber: '05 44 22 11 08',
     mmOperator: 'Orange Money',
     expiration: '22/06/2026',
+    status: 'declared',
   },
   {
     id: 'lot-503',
@@ -76,6 +78,7 @@ export const CATALOGUE_LOTS = [
     mmNumber: '07 88 33 44 55',
     mmOperator: 'MTN Money',
     expiration: '20/06/2026',
+    status: 'available',
   },
   {
     id: 'lot-504',
@@ -91,6 +94,7 @@ export const CATALOGUE_LOTS = [
     mmNumber: '01 02 03 04 05',
     mmOperator: 'Wave',
     expiration: '28/06/2026',
+    status: 'declared',
   },
   {
     id: 'lot-505',
@@ -106,6 +110,7 @@ export const CATALOGUE_LOTS = [
     mmNumber: '07 45 12 89 34',
     mmOperator: 'Wave',
     expiration: '24/06/2026',
+    status: 'available',
   },
   {
     id: 'lot-506',
@@ -121,6 +126,7 @@ export const CATALOGUE_LOTS = [
     mmNumber: '07 11 22 33 44',
     mmOperator: 'Wave',
     expiration: '30/06/2026',
+    status: 'available',
   },
 ];
 

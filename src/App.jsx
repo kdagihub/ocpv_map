@@ -8,6 +8,7 @@ import DashboardDGM from './components/DashboardDGM';
 import ProducerDemo from './components/producteur/ProducerDemo';
 import BuyerDemo from './components/acheteur/BuyerDemo';
 import TransporterDemo from './components/transporteur/TransporterDemo';
+import DashboardHub from './components/DashboardHub';
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
           <Route path="/demo-acheteur" element={<BuyerDemo />} />
           <Route path="/demo-transporteur" element={<TransporterDemo />} />
           <Route path="/dashboard-dgm" element={<DashboardDGM />} />
+          <Route path="/dashboard-hub" element={<DashboardHub />} />
         </Routes>
       </BrowserRouter>
     </ThemeProvider>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { createElement, useState, useEffect } from 'react';
 import {
   Home,
   History,
@@ -20,6 +20,8 @@ import {
   X,
   QrCode,
   ShieldCheck,
+  Truck,
+  AlertCircle,
 } from 'lucide-react';
 import logoOcpv from '../../assets/logo_ocpv.png';
 import imgIgname from '../../assets/igname.png';
@@ -472,6 +474,13 @@ function DeclareScreen({ onBack, onConfirm }) {
   const [quantite, setQuantite] = useState('');
   const [hub, setHub] = useState('Bouaké Centre');
   const [lieuRamassage, setLieuRamassage] = useState("N'Gattakro · carrefour marché");
+  const [transportMode, setTransportMode] = useState('depot');
+  const [tonnageTouched, setTonnageTouched] = useState(false);
+  const tonnage = Number.parseFloat(quantite.replace(',', '.'));
+  const tonnageValide = Number.isFinite(tonnage) && tonnage >= 5;
+  const showTonnageError = tonnageTouched && quantite !== '' && !tonnageValide;
+  const formValide = produit && tonnageValide
+    && (transportMode === 'depot' || lieuRamassage.trim());
 
   return (
     <div className="flex flex-col h-full min-h-0 bg-slate-50">
@@ -492,31 +501,94 @@ function DeclareScreen({ onBack, onConfirm }) {
         <div>
           <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Quantité (tonnes)</label>
           <input
-            type="text"
+            type="number"
             inputMode="decimal"
-            placeholder="Ex : 2,5"
+            min="5"
+            step="0.1"
+            placeholder="Minimum 5"
             value={quantite}
-            onChange={(e) => setQuantite(e.target.value)}
-            className="mt-2 w-full py-4 px-4 rounded-2xl border-2 border-slate-200 text-xl font-bold text-center focus:border-orange-500 focus:outline-none"
+            onChange={(e) => {
+              setQuantite(e.target.value);
+              if (tonnageTouched) setTonnageTouched(true);
+            }}
+            onBlur={() => setTonnageTouched(true)}
+            aria-invalid={showTonnageError}
+            aria-describedby="tonnage-help"
+            className={`mt-2 w-full py-4 px-4 rounded-2xl border-2 text-xl font-bold text-center focus:outline-none ${
+              showTonnageError
+                ? 'border-red-400 bg-red-50 focus:border-red-500'
+                : 'border-slate-200 focus:border-orange-500'
+            }`}
           />
+          <p id="tonnage-help" className={`mt-1.5 flex items-center gap-1 text-[10px] font-medium ${showTonnageError ? 'text-red-600' : 'text-slate-400'}`}>
+            {showTonnageError && <AlertCircle size={12} />}
+            {showTonnageError
+              ? 'Le tonnage minimum accepté pour une déclaration est de 5 tonnes.'
+              : 'Minimum requis par déclaration : 5 tonnes.'}
+          </p>
         </div>
 
         <div>
-          <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide flex items-center gap-1">
-            <MapPin size={12} className="text-orange-500" />
-            Lieu de ramassage
-          </label>
-          <p className="text-[10px] text-slate-400 mt-0.5 mb-2">
-            Où le camion OCPV doit venir charger votre récolte
-          </p>
-          <input
-            type="text"
-            value={lieuRamassage}
-            onChange={(e) => setLieuRamassage(e.target.value)}
-            placeholder="Village, carrefour, parcelle…"
-            className="w-full py-3 px-4 rounded-xl border-2 border-slate-200 text-sm font-medium focus:border-orange-500 focus:outline-none"
-          />
+          <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Mode de transport</label>
+          <div className="mt-2 grid gap-2">
+            {[
+              { id: 'depot', icon: Building2, title: 'Je dépose moi-même', detail: 'les produits au Hub OCPV' },
+              { id: 'collecte', icon: Truck, title: 'Je demande un camion OCPV', detail: 'pour le ramassage' },
+            ].map(({ id, title, detail }) => (
+              <button
+                key={id}
+                type="button"
+                role="radio"
+                aria-checked={transportMode === id}
+                onClick={() => setTransportMode(id)}
+                className={`flex items-center gap-3 rounded-2xl border-2 p-3 text-left transition-colors ${
+                  transportMode === id
+                    ? 'border-green-500 bg-green-50 text-green-800'
+                    : 'border-slate-200 bg-white text-slate-700'
+                }`}
+              >
+                <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${transportMode === id ? 'bg-green-600 text-white' : 'bg-slate-100 text-slate-500'}`}>
+                  {id === 'depot' ? <Building2 size={19} /> : <Truck size={19} />}
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-xs font-bold">{title}</span>
+                  <span className="block text-[10px] opacity-70">{detail}</span>
+                </span>
+                <span className={`ml-auto h-4 w-4 shrink-0 rounded-full border-2 ${transportMode === id ? 'border-green-600 bg-green-600 ring-2 ring-green-200' : 'border-slate-300'}`} />
+              </button>
+            ))}
+          </div>
         </div>
+
+        {transportMode === 'collecte' && (
+          <>
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-3">
+              <div className="flex items-start gap-2">
+                <Truck size={17} className="mt-0.5 shrink-0 text-amber-700" />
+                <div>
+                  <p className="text-xs font-bold text-amber-900">Frais logistiques estimés</p>
+                  <p className="mt-1 text-[10px] leading-relaxed text-amber-800">
+                    Un tarif incluant le coût du chauffeur et du camion sera calculé selon la distance et le tonnage, puis déduit du règlement final.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide flex items-center gap-1">
+                <MapPin size={12} className="text-orange-500" />
+                Lieu de ramassage
+              </label>
+              <input
+                type="text"
+                value={lieuRamassage}
+                onChange={(e) => setLieuRamassage(e.target.value)}
+                placeholder="Village, carrefour, parcelle…"
+                className="mt-2 w-full py-3 px-4 rounded-xl border-2 border-slate-200 text-sm font-medium focus:border-orange-500 focus:outline-none"
+              />
+            </div>
+          </>
+        )}
 
         <div>
           <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Hub OCPV de destination</label>
@@ -536,8 +608,19 @@ function DeclareScreen({ onBack, onConfirm }) {
       <div className="p-4 bg-white border-t border-slate-100">
         <button
           type="button"
-          disabled={!produit || !quantite || !lieuRamassage.trim()}
-          onClick={() => onConfirm({ produit, quantite, hub, lieuRamassage })}
+          disabled={!formValide}
+          onClick={() => {
+            setTonnageTouched(true);
+            if (formValide) {
+              onConfirm({
+                produit,
+                quantite,
+                hub,
+                transportMode,
+                lieuRamassage: transportMode === 'depot' ? `Dépôt direct · ${hub}` : lieuRamassage,
+              });
+            }
+          }}
           className="w-full py-4 rounded-2xl bg-orange-500 text-white font-bold text-base disabled:opacity-40 active:scale-[0.98] transition-transform"
         >
           Confirmer la déclaration
@@ -640,7 +723,7 @@ function AccueilScreen({ profile, onDeclare }) {
         <div className="grid grid-cols-2 gap-2">
           {STATS.map(({ id, label, value, icon: Icon, color, bg }) => (
             <div key={id} className={`${bg} rounded-2xl p-3 border border-slate-100`}>
-              <Icon size={16} className={color} />
+              {createElement(Icon, { size: 16, className: color })}
               <p className="text-2xl font-extrabold text-slate-900 mt-1">{value}</p>
               <p className="text-[10px] font-medium text-slate-500 leading-tight">{label}</p>
             </div>
@@ -902,7 +985,7 @@ function CompteScreen({ profile, setProfile, parcelles, compteView, setCompteVie
             className="w-full flex items-center gap-3 p-4 rounded-xl bg-white border border-slate-100 text-left active:bg-slate-50"
           >
             <div className="p-2 rounded-lg bg-orange-500/10">
-              <Icon size={18} className="text-orange-500" />
+              {createElement(Icon, { size: 18, className: 'text-orange-500' })}
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-slate-900">{label}</p>
@@ -957,6 +1040,27 @@ export default function ProducerPhoneMockup() {
     const newLot = createLot(data, ['declare']);
     setLots((prev) => [newLot, ...prev]);
     setActiveLot(newLot);
+    try {
+      const publicLots = JSON.parse(localStorage.getItem('agrilink-public-declarations') || '[]');
+      const publicLot = {
+        id: newLot.id,
+        ref: newLot.ref,
+        produit: newLot.produit,
+        qte: newLot.qte,
+        qteNum: Number.parseFloat(data.quantite.replace(',', '.')),
+        prixUnit: 0,
+        hub: newLot.hub,
+        region: newLot.hub.includes('Abidjan') ? 'Lagunes' : newLot.hub.includes('Yamoussoukro') ? 'Lacs' : 'Gbêkê',
+        ville: newLot.hub.split(' ')[0],
+        producteur: `${profile.prenom} ${profile.nom}`,
+        mmNumber: profile.telPrincipal,
+        mmOperator: 'Mobile Money',
+        status: 'declared',
+      };
+      localStorage.setItem('agrilink-public-declarations', JSON.stringify([publicLot, ...publicLots].slice(0, 10)));
+    } catch {
+      // La persistance locale est un confort de démo ; la déclaration reste créée en mémoire.
+    }
     setScreen('lot-pending');
   };
 
@@ -1082,7 +1186,7 @@ export default function ProducerPhoneMockup() {
                   className={`flex-1 min-w-0 flex flex-col items-center gap-0.5 py-1.5 px-0.5 ${tab === id ? 'text-orange-500' : 'text-slate-400'
                     }`}
                 >
-                  <Icon size={20} strokeWidth={tab === id ? 2.5 : 2} />
+                  {createElement(Icon, { size: 20, strokeWidth: tab === id ? 2.5 : 2 })}
                   <span className="text-[8px] sm:text-[9px] font-semibold text-center leading-tight truncate max-w-full">
                     {label}
                   </span>

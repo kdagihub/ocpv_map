@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { createElement, useState, useMemo } from 'react';
 import {
   Search,
   ShoppingCart,
@@ -20,6 +20,8 @@ import {
   Lock,
   Save,
   ExternalLink,
+  CheckCircle2,
+  ShieldCheck,
 } from 'lucide-react';
 import logoOcpv from '../../assets/logo_ocpv.png';
 import imgCamion from '../../assets/camion.png';
@@ -71,6 +73,7 @@ function PhoneStatusBar() {
 }
 
 function LotCard({ lot, onSelect, compact, favorite, onToggleFavorite }) {
+  const isAvailable = lot.status === 'available';
   return (
     <button
       type="button"
@@ -92,9 +95,19 @@ function LotCard({ lot, onSelect, compact, favorite, onToggleFavorite }) {
               </button>
             )}
           </div>
-          <p className="text-xs font-semibold text-orange-600">{formatPrice(lot.prixUnit)}/t</p>
+          <p className={`text-xs font-semibold ${isAvailable ? 'text-orange-600' : 'text-slate-500'}`}>
+            {isAvailable ? `${formatPrice(lot.prixUnit)}/t` : 'Prix après contrôle au Hub'}
+          </p>
           <p className="text-[10px] text-slate-400 mt-0.5">{lot.hub} · {lot.ville}</p>
           <p className="text-[9px] font-mono text-slate-400">{lot.ref}</p>
+          <span className={`mt-2 inline-flex items-center gap-1 rounded-full px-2 py-1 text-[9px] font-extrabold uppercase tracking-wide ${
+            isAvailable
+              ? 'bg-green-100 text-green-700 ring-1 ring-green-200'
+              : 'bg-amber-100 text-amber-800 ring-1 ring-amber-200'
+          }`}>
+            {isAvailable ? <CheckCircle2 size={10} /> : <Clock size={10} />}
+            {isAvailable ? 'Disponible' : 'En cours de vérification'}
+          </span>
         </div>
       </div>
     </button>
@@ -137,83 +150,133 @@ function IntentionScreen({ onBack, onSubmit, initialText }) {
   );
 }
 
-function PaymentScreen({ lot, onBack, onPaid }) {
+function CheckoutScreen({ lot, mmRef, setMmRef, onBack, onSubmit }) {
   const total = Math.round(lot.prixUnit * lot.qteNum);
+  const taxes = Math.round(total * 0.02);
+  const [proofAttached, setProofAttached] = useState(false);
+  const [taxesPaid, setTaxesPaid] = useState(false);
+  const checkoutReady = mmRef.trim() && proofAttached && taxesPaid;
 
   return (
     <div className="flex flex-col h-full min-h-0 bg-slate-50">
       <div className="px-4 pt-2 pb-3 bg-white border-b border-slate-100">
         <button type="button" onClick={onBack} className="text-sm text-orange-500 font-medium mb-2">← Retour</button>
-        <h2 className="text-lg font-bold text-slate-900">Paiement direct producteur</h2>
-        <p className="text-xs text-slate-500">Hors plateforme OCPV · P2P Mobile Money</p>
+        <h2 className="text-lg font-bold text-slate-900">Finaliser mon achat</h2>
+        <p className="text-xs text-slate-500">2 paiements obligatoires · une seule validation</p>
       </div>
-      <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4">
-        <div className="p-4 rounded-xl bg-white border border-slate-100">
-          <p className="text-sm font-bold text-slate-900">{lot.produit} · {lot.qte}</p>
-          <p className="text-2xl font-extrabold text-orange-600 mt-2">{formatPrice(total)}</p>
-          <p className="text-xs text-slate-500 mt-1">Producteur · {lot.producteur}</p>
+      <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-3">
+        <div className="flex items-center justify-between rounded-xl bg-slate-900 p-3 text-white">
+          <div>
+            <p className="text-xs font-bold">{lot.produit} · {lot.qte}</p>
+            <p className="text-[9px] text-white/60">{lot.ref}</p>
+          </div>
+          <p className="text-sm font-extrabold">{formatPrice(total + taxes)}</p>
         </div>
-        <div className="p-4 rounded-xl bg-blue-50 border border-blue-200">
-          <p className="text-xs font-bold text-blue-800 uppercase">Compte {lot.mmOperator}</p>
-          <div className="flex items-center justify-between mt-2">
-            <p className="text-lg font-mono font-bold text-slate-900">{lot.mmNumber}</p>
-            <button type="button" className="p-2 rounded-lg bg-white border border-blue-200">
-              <Copy size={16} className="text-blue-600" />
+
+        <section className="overflow-hidden rounded-2xl border-2 border-blue-200 bg-white">
+          <div className="flex items-center gap-2 bg-blue-50 px-3 py-2.5">
+            <span className="grid h-6 w-6 place-items-center rounded-full bg-blue-600 text-[10px] font-black text-white">1</span>
+            <div>
+              <h3 className="text-xs font-extrabold text-slate-900">Paiement du Producteur</h3>
+              <p className="text-[9px] text-blue-700">Mobile Money P2P · {formatPrice(total)}</p>
+            </div>
+          </div>
+          <div className="space-y-2 p-3">
+            <div className="flex items-center justify-between rounded-lg bg-blue-50 px-3 py-2">
+              <div>
+                <p className="text-[9px] font-bold uppercase text-blue-700">Compte {lot.mmOperator}</p>
+                <p className="font-mono text-xs font-bold text-slate-900">{lot.mmNumber}</p>
+              </div>
+              <Copy size={14} className="text-blue-600" />
+            </div>
+            <input
+              value={mmRef}
+              onChange={(e) => setMmRef(e.target.value)}
+              placeholder="Référence Mobile Money"
+              className="w-full rounded-xl border-2 border-slate-200 px-3 py-2.5 text-xs font-mono focus:border-blue-500 focus:outline-none"
+            />
+            <button
+              type="button"
+              onClick={() => setProofAttached(true)}
+              className={`flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed py-3 text-[10px] font-bold ${
+                proofAttached ? 'border-green-300 bg-green-50 text-green-700' : 'border-blue-300 bg-blue-50/50 text-blue-700'
+              }`}
+            >
+              {proofAttached ? <CheckCircle2 size={16} /> : <Upload size={16} />}
+              {proofAttached ? 'Preuve Mobile Money ajoutée' : 'Uploader la preuve P2P'}
             </button>
           </div>
-          <p className="text-[10px] text-blue-700/80 mt-2">Effectuez le transfert puis confirmez ci-dessous.</p>
-        </div>
-        <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-[10px] text-amber-800 leading-relaxed">
-          L&apos;OCPV ne séquestre pas les fonds. Vous payez le producteur directement, puis soumettez la preuve au hub.
-        </div>
+        </section>
+
+        <section className="overflow-hidden rounded-2xl border-2 border-orange-200 bg-white">
+          <div className="flex items-center gap-2 bg-orange-50 px-3 py-2.5">
+            <span className="grid h-6 w-6 place-items-center rounded-full bg-orange-500 text-[10px] font-black text-white">2</span>
+            <div>
+              <h3 className="text-xs font-extrabold text-slate-900">Paiement des Taxes OCPV</h3>
+              <p className="text-[9px] text-orange-700">Facturation intégrée AGRILINK-CI</p>
+            </div>
+          </div>
+          <div className="p-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] text-slate-500">Taxes OCPV (2 %)</span>
+              <span className="text-sm font-extrabold text-slate-900">{formatPrice(taxes)}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setTaxesPaid((value) => !value)}
+              className={`mt-3 flex w-full items-center justify-center gap-2 rounded-xl py-3 text-[10px] font-bold ${
+                taxesPaid ? 'bg-green-100 text-green-700' : 'bg-orange-500 text-white'
+              }`}
+            >
+              {taxesPaid ? <CheckCircle2 size={15} /> : <ShieldCheck size={15} />}
+              {taxesPaid ? 'Taxes OCPV validées' : 'Payer les taxes OCPV'}
+            </button>
+          </div>
+        </section>
+        <p className="text-center text-[9px] leading-relaxed text-slate-400">
+          Le reçu d&apos;achat est généré uniquement après validation des deux sections.
+        </p>
       </div>
-      <div className="p-4 bg-white border-t border-slate-100 space-y-2">
-        <button type="button" onClick={onPaid} className="w-full py-4 rounded-2xl bg-green-600 text-white font-bold">
-          J&apos;ai payé · Soumettre la preuve OCPV
+      <div className="p-4 bg-white border-t border-slate-100">
+        <button
+          type="button"
+          disabled={!checkoutReady}
+          onClick={() => onSubmit({ total, taxes })}
+          className="w-full py-4 rounded-2xl bg-orange-500 text-white font-bold disabled:opacity-40"
+        >
+          Valider les deux paiements
         </button>
       </div>
     </div>
   );
 }
 
-function ProofScreen({ lot, mmRef, setMmRef, onBack, onSubmit }) {
+function PurchaseReceiptScreen({ lot, payment, onDone }) {
   return (
-    <div className="flex flex-col h-full min-h-0 bg-slate-50">
-      <div className="px-4 pt-2 pb-3 bg-white border-b border-slate-100">
-        <button type="button" onClick={onBack} className="text-sm text-orange-500 font-medium mb-2">← Retour</button>
-        <h2 className="text-lg font-bold text-slate-900">Preuve de paiement OCPV</h2>
-        <p className="text-xs text-slate-500">Lot · {lot.ref}</p>
-      </div>
-      <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4">
-        <div>
-          <label className="text-xs font-semibold text-slate-500 uppercase">Référence Mobile Money</label>
-          <input
-            value={mmRef}
-            onChange={(e) => setMmRef(e.target.value)}
-            placeholder="Ex : WVE-8847291"
-            className="mt-2 w-full py-3 px-4 rounded-xl border-2 border-slate-200 text-sm font-mono focus:border-orange-500 focus:outline-none"
-          />
-        </div>
-        <div>
-          <label className="text-xs font-semibold text-slate-500 uppercase">Justificatif (PDF ou image)</label>
-          <button type="button" className="mt-2 w-full flex flex-col items-center gap-2 py-8 rounded-xl border-2 border-dashed border-orange-400/50 bg-orange-50/50 text-orange-700">
-            <Upload size={24} />
-            <span className="text-xs font-semibold">Capturer ou importer le reçu</span>
-          </button>
-        </div>
-        <div className="flex items-start gap-2 p-3 rounded-xl bg-slate-100 text-[10px] text-slate-600">
-          <Clock size={14} className="shrink-0 text-orange-500" />
-          Timer 24 h : le producteur confirme la réception. L&apos;agent OCPV enregistre CP/APE au hub.
+    <div className="flex h-full min-h-0 flex-col bg-slate-50">
+      <div className="flex-1 overflow-y-auto p-5">
+        <div className="rounded-3xl border border-slate-200 bg-white p-5 text-center shadow-sm">
+          <span className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-green-100 text-green-600">
+            <CheckCircle2 size={28} />
+          </span>
+          <p className="mt-3 text-[10px] font-black uppercase tracking-[0.18em] text-green-600">Paiement confirmé</p>
+          <h2 className="mt-1 text-xl font-extrabold text-slate-900">Reçu d&apos;Achat</h2>
+          <p className="mt-1 font-mono text-[9px] text-slate-400">RA-{lot.ref.replace('OCPV-', '')}</p>
+          <div className="my-4 border-t border-dashed border-slate-200" />
+          <div className="space-y-2 text-left text-xs">
+            <div className="flex justify-between"><span className="text-slate-500">Lot</span><b>{lot.produit} · {lot.qte}</b></div>
+            <div className="flex justify-between"><span className="text-slate-500">Producteur</span><b>{formatPrice(payment.total)}</b></div>
+            <div className="flex justify-between"><span className="text-slate-500">Taxes OCPV</span><b>{formatPrice(payment.taxes)}</b></div>
+            <div className="flex justify-between border-t border-slate-100 pt-2 text-sm"><span className="font-bold">Total validé</span><b className="text-green-700">{formatPrice(payment.total + payment.taxes)}</b></div>
+          </div>
+          <div className="mt-4 flex items-center justify-center gap-1 rounded-xl bg-slate-50 py-2 text-[9px] font-semibold text-slate-500">
+            <ShieldCheck size={12} className="text-green-600" /> Transaction enregistrée par AGRILINK-CI
+          </div>
         </div>
       </div>
-      <div className="p-4 bg-white border-t border-slate-100">
-        <button
-          type="button"
-          disabled={!mmRef.trim()}
-          onClick={onSubmit}
-          className="w-full py-4 rounded-2xl bg-orange-500 text-white font-bold disabled:opacity-40"
-        >
-          Soumettre au hub OCPV
+      <div className="border-t border-slate-100 bg-white p-4">
+        <button type="button" onClick={onDone} className="w-full rounded-2xl bg-slate-900 py-4 font-bold text-white">
+          Voir ma commande
         </button>
       </div>
     </div>
@@ -229,7 +292,7 @@ export default function BuyerPhoneMockup({ buyerType = 'B2B' }) {
   const [region, setRegion] = useState('Gbêkê');
   const [hub, setHub] = useState('Bouaké Centre');
   const [ville, setVille] = useState('Toutes');
-  const [produit, setProduit] = useState('Tous');
+  const [produit] = useState('Tous');
   const [search, setSearch] = useState('');
 
   const [cart, setCart] = useState([]);
@@ -237,6 +300,15 @@ export default function BuyerPhoneMockup({ buyerType = 'B2B' }) {
   const [orders, setOrders] = useState(INITIAL_ORDERS);
   const [activeLot, setActiveLot] = useState(null);
   const [mmRef, setMmRef] = useState('');
+  const [activePayment, setActivePayment] = useState(null);
+  const [catalogueLots] = useState(() => {
+    try {
+      const declarations = JSON.parse(localStorage.getItem('agrilink-public-declarations') || '[]');
+      return [...declarations, ...CATALOGUE_LOTS];
+    } catch {
+      return CATALOGUE_LOTS;
+    }
+  });
 
   const profile = buyerType === 'B2C' ? BUYER_PROFILE_B2C : BUYER_PROFILE_B2B;
 
@@ -244,8 +316,8 @@ export default function BuyerPhoneMockup({ buyerType = 'B2B' }) {
   const villes = VILLES_BY_HUB[hub] || [];
 
   const filteredLots = useMemo(
-    () => filterLots(CATALOGUE_LOTS, { region, hub, ville, produit, search }),
-    [region, hub, ville, produit, search],
+    () => filterLots(catalogueLots, { region, hub, ville, produit, search }),
+    [catalogueLots, region, hub, ville, produit, search],
   );
 
   const showToast = (msg) => {
@@ -262,7 +334,7 @@ export default function BuyerPhoneMockup({ buyerType = 'B2B' }) {
     showToast(`✓ ${lot.produit} ajouté au panier`);
   };
 
-  const submitProof = () => {
+  const submitCheckout = (payment) => {
     const order = {
       id: `cmd-${Date.now()}`,
       ref: activeLot.ref,
@@ -273,13 +345,12 @@ export default function BuyerPhoneMockup({ buyerType = 'B2B' }) {
       statutColor: 'text-orange-600',
       date: new Date().toLocaleDateString('fr-FR'),
       mmRef,
+      taxes: payment.taxes,
     };
     setOrders((prev) => [order, ...prev]);
     setCart((prev) => prev.filter((c) => c.id !== activeLot.id));
-    setScreen('main');
-    setTab('commandes');
-    setMmRef('');
-    showToast('Preuve enregistrée · Timer 24 h activé');
+    setActivePayment(payment);
+    setScreen('receipt');
   };
 
   const hideNav = screen !== 'main';
@@ -308,10 +379,20 @@ export default function BuyerPhoneMockup({ buyerType = 'B2B' }) {
                   showToast('Intention transmise · Antenne OCPV');
                 }}
               />
-            ) : screen === 'payment' && activeLot ? (
-              <PaymentScreen lot={activeLot} onBack={() => setScreen('main')} onPaid={() => setScreen('proof')} />
-            ) : screen === 'proof' && activeLot ? (
-              <ProofScreen lot={activeLot} mmRef={mmRef} setMmRef={setMmRef} onBack={() => setScreen('payment')} onSubmit={submitProof} />
+            ) : screen === 'checkout' && activeLot ? (
+              <CheckoutScreen lot={activeLot} mmRef={mmRef} setMmRef={setMmRef} onBack={() => setScreen('main')} onSubmit={submitCheckout} />
+            ) : screen === 'receipt' && activeLot && activePayment ? (
+              <PurchaseReceiptScreen
+                lot={activeLot}
+                payment={activePayment}
+                onDone={() => {
+                  setScreen('main');
+                  setTab('commandes');
+                  setMmRef('');
+                  setActivePayment(null);
+                  showToast('Achat confirmé · reçu disponible');
+                }}
+              />
             ) : screen === 'transporteurs' ? (
               <div className="flex flex-col h-full min-h-0 bg-slate-50">
                 <div className="px-4 pt-2 pb-3 bg-white border-b border-slate-100">
@@ -390,10 +471,29 @@ export default function BuyerPhoneMockup({ buyerType = 'B2B' }) {
                       ) : (
                         filteredLots.map((lot) => (
                           <div key={lot.id} className="rounded-xl bg-white border border-slate-100 overflow-hidden">
-                            <LotCard lot={lot} favorite={favorites.includes(lot.id)} onToggleFavorite={toggleFavorite} onSelect={() => { setActiveLot(lot); addToCart(lot); }} />
+                            <LotCard
+                              lot={lot}
+                              favorite={favorites.includes(lot.id)}
+                              onToggleFavorite={toggleFavorite}
+                              onSelect={lot.status === 'available' ? () => { setActiveLot(lot); addToCart(lot); } : undefined}
+                            />
                             <div className="flex border-t border-slate-100">
-                              <button type="button" onClick={() => addToCart(lot)} className="flex-1 py-2 text-[10px] font-bold text-orange-600">Panier</button>
-                              <button type="button" onClick={() => { setActiveLot(lot); setScreen('payment'); }} className="flex-1 py-2 text-[10px] font-bold text-green-700 border-l border-slate-100">Acheter</button>
+                              <button
+                                type="button"
+                                disabled={lot.status !== 'available'}
+                                onClick={() => addToCart(lot)}
+                                className="flex-1 py-2 text-[10px] font-bold text-orange-600 disabled:cursor-not-allowed disabled:text-slate-300"
+                              >
+                                Panier
+                              </button>
+                              <button
+                                type="button"
+                                disabled={lot.status !== 'available'}
+                                onClick={() => { setActiveLot(lot); setScreen('checkout'); }}
+                                className="flex-1 border-l border-slate-100 py-2 text-[10px] font-bold text-green-700 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400"
+                              >
+                                {lot.status === 'available' ? 'Acheter' : 'Achat indisponible'}
+                              </button>
                             </div>
                           </div>
                         ))
@@ -422,15 +522,15 @@ export default function BuyerPhoneMockup({ buyerType = 'B2B' }) {
                           cart.map((lot) => (
                             <div key={lot.id}>
                               <LotCard lot={lot} compact />
-                              <button type="button" onClick={() => { setActiveLot(lot); setScreen('payment'); }} className="w-full mt-1 py-2.5 rounded-xl bg-green-600 text-white text-xs font-bold">
-                                Procéder au paiement P2P
+                              <button type="button" onClick={() => { setActiveLot(lot); setScreen('checkout'); }} className="w-full mt-1 py-2.5 rounded-xl bg-green-600 text-white text-xs font-bold">
+                                Finaliser les 2 paiements
                               </button>
                             </div>
                           ))
                         )
                       )}
                       {subTab === 'favoris' && (
-                        CATALOGUE_LOTS.filter((l) => favorites.includes(l.id)).map((lot) => (
+                        catalogueLots.filter((l) => favorites.includes(l.id)).map((lot) => (
                           <LotCard key={lot.id} lot={lot} favorite onToggleFavorite={toggleFavorite} onSelect={() => addToCart(lot)} />
                         ))
                       )}
@@ -546,7 +646,7 @@ export default function BuyerPhoneMockup({ buyerType = 'B2B' }) {
                   onClick={() => setTab(id)}
                   className={`flex-1 min-w-0 flex flex-col items-center gap-0.5 py-1.5 ${tab === id ? 'text-orange-500' : 'text-slate-400'}`}
                 >
-                  <Icon size={18} strokeWidth={tab === id ? 2.5 : 2} />
+                  {createElement(Icon, { size: 18, strokeWidth: tab === id ? 2.5 : 2 })}
                   <span className="text-[7px] font-semibold text-center leading-tight truncate max-w-full">{label}</span>
                 </button>
               ))}

@@ -1,3 +1,4 @@
+import { createElement } from 'react';
 import {
   Sprout,
   FileCheck,
@@ -98,7 +99,7 @@ export default function ProducerInfoPanel() {
                 className="flex gap-3 p-3 rounded-xl bg-slate-50 dark:bg-[#121212] border border-slate-200 dark:border-white/10"
               >
                 <div className="shrink-0 p-2 h-fit rounded-lg bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10">
-                  <Icon size={16} className="text-green-600 dark:text-green-500" />
+                  {createElement(Icon, { size: 16, className: 'text-green-600 dark:text-green-500' })}
                 </div>
                 <div>
                   <h3 className="text-sm font-semibold text-slate-900 dark:text-white">{title}</h3>
@@ -138,9 +139,9 @@ export default function ProducerInfoPanel() {
             Cycle de vie d&apos;un lot
           </h2>
           <ul className="text-xs text-slate-600 dark:text-white/55 space-y-1.5">
-            <li><strong className="text-slate-800 dark:text-white/80">Déclaré</strong> — le paysan signale sa disponibilité et le lieu de ramassage.</li>
-            <li><strong className="text-slate-800 dark:text-white/80">En hub</strong> — marchandise physique au hub, contrôle qualité agent (pas encore en vente).</li>
-            <li><strong className="text-slate-800 dark:text-white/80">En vente</strong> — validé par l&apos;agent : publication automatique sur le catalogue certifié (CDC §3.2).</li>
+            <li><strong className="text-slate-800 dark:text-white/80">Déclaré</strong> — visible immédiatement au catalogue avec achat bloqué pendant la vérification.</li>
+            <li><strong className="text-slate-800 dark:text-white/80">En hub</strong> — marchandise physique pesée et contrôlée par l&apos;agent.</li>
+            <li><strong className="text-slate-800 dark:text-white/80">Disponible</strong> — contrôle validé : achat activé sur le catalogue public.</li>
           </ul>
         </section>
 
@@ -150,7 +151,7 @@ export default function ProducerInfoPanel() {
           </h2>
           <ul className="text-xs text-slate-600 dark:text-white/55 space-y-1.5 list-disc list-inside">
             <li>Accueil : stats + bouton « Déclarer ma récolte »</li>
-            <li>Déclaration : produit → quantité → lieu de ramassage → hub OCPV</li>
+            <li>Déclaration : produit → minimum 5 t → dépôt direct ou camion OCPV → hub</li>
             <li>Déclaration → attente validation → récépissé QR</li>
             <li>Historique : timeline par lot (même entité tracée)</li>
             <li>Mon compte : profil modifiable, coopérative en lecture seule</li>
