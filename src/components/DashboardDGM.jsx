@@ -1,9 +1,10 @@
-import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { createElement, useMemo, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Globe, PieChart, Activity, Map, ArrowLeft, Filter, DollarSign,
   Truck, Terminal, Download, ShieldCheck, BarChart3, TrendingUp,
   Leaf, ArrowRight, ExternalLink, MapPin, FileText, QrCode, Search, Menu, X,
+  AlertTriangle, BrainCircuit, Sparkles, Scale,
 } from 'lucide-react';
 import logoOcpv from '../assets/logo_ocpv.png';
 
@@ -89,10 +90,39 @@ const FLUX_ANTENNES = [
   { nom: 'San Pedro', entrees: 790, sorties: 650, recettes: 1640000, x: 18, y: 78 },
 ];
 
+const PREDICTIONS_PRIX = {
+  'J+7': [
+    { produit: 'Igname', actuel: 2000, prevision: 2180, variation: '+9 %', confiance: 94 },
+    { produit: 'Manioc', actuel: 1000, prevision: 970, variation: '-3 %', confiance: 91 },
+    { produit: 'Tomate', actuel: 2500, prevision: 2925, variation: '+17 %', confiance: 88 },
+  ],
+  'J+30': [
+    { produit: 'Igname', actuel: 2000, prevision: 2360, variation: '+18 %', confiance: 86 },
+    { produit: 'Manioc', actuel: 1000, prevision: 920, variation: '-8 %', confiance: 84 },
+    { produit: 'Tomate', actuel: 2500, prevision: 3250, variation: '+30 %', confiance: 81 },
+  ],
+};
+
+const INDICES_ABONDANCE = [
+  { region: 'Poro', produit: 'Maïs', indice: 82, statut: 'Surplus', classe: 'bg-green-600 text-white' },
+  { region: 'Gbêkê', produit: 'Igname', indice: 76, statut: 'Abondant', classe: 'bg-green-500 text-white' },
+  { region: 'Haut-Sassandra', produit: 'Manioc', indice: 63, statut: 'Équilibré', classe: 'bg-lime-400 text-slate-900' },
+  { region: 'Grands-Ponts', produit: 'Banane', indice: 51, statut: 'Équilibré', classe: 'bg-amber-300 text-slate-900' },
+  { region: 'Lagunes', produit: 'Tomate', indice: 34, statut: 'Tension', classe: 'bg-orange-500 text-white' },
+  { region: 'Sud-Comoé', produit: 'Igname', indice: 22, statut: 'Risque J+30', classe: 'bg-red-600 text-white' },
+];
+
+const ALERTES_ANOMALIES = [
+  { niveau: 'Critique', zone: 'Abidjan · Adjamé', signal: 'Prix tomate +41 % en 48 h', score: '0,93', classe: 'border-red-200 bg-red-50 text-red-800' },
+  { niveau: 'À vérifier', zone: 'Bouaké · Hub Centre', signal: 'Volume déclaré 3,4× la moyenne', score: '0,87', classe: 'border-orange-200 bg-orange-50 text-orange-800' },
+  { niveau: 'Surveillance', zone: 'Korhogo · Corridor Sud', signal: 'Répétition de lots similaires', score: '0,74', classe: 'border-amber-200 bg-amber-50 text-amber-800' },
+];
+
 const TAB_TITLES = {
   nationale: 'Supervision Globale',
   finances: 'Finances & DAAF',
   sim: 'Statistiques SIM',
+  intelligence: 'Intelligence Prédictive',
   cartographie: 'Cartographie des Flux',
   certificats: 'Traçabilité CP / APE',
 };
@@ -101,6 +131,7 @@ const NAV_ITEMS = [
   { id: 'nationale', label: 'Vue Nationale (Macro)', icon: Globe },
   { id: 'finances', label: 'Finances & DAAF', icon: DollarSign },
   { id: 'sim', label: 'Statistiques (SIM)', icon: BarChart3 },
+  { id: 'intelligence', label: 'Cockpit IA & Prévisions', icon: BrainCircuit },
   { id: 'cartographie', label: 'Cartographie des Flux', icon: Map },
   { id: 'certificats', label: 'Traçabilité CP / APE', icon: FileText },
 ];
@@ -109,11 +140,16 @@ const formatFcfa = (montant) => `${montant.toLocaleString('fr-FR')} FCFA`;
 
 const DashboardDGM = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('nationale');
+  const [searchParams] = useSearchParams();
+  const requestedTab = searchParams.get('tab');
+  const [activeTab, setActiveTab] = useState(
+    Object.hasOwn(TAB_TITLES, requestedTab) ? requestedTab : 'nationale',
+  );
   const [filtreAntenne, setFiltreAntenne] = useState('Toutes les Antennes');
   const [filtreTypeActe, setFiltreTypeActe] = useState('Tous');
   const [searchCertificat, setSearchCertificat] = useState('');
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [horizon, setHorizon] = useState('J+30');
 
   const selectTab = (id) => {
     setActiveTab(id);
@@ -250,7 +286,7 @@ const DashboardDGM = () => {
           <p className="text-xs text-slate-500 uppercase font-bold tracking-wider px-3 mb-2 mt-2 sm:mt-4">Pilotage National</p>
           {NAV_ITEMS.map(({ id, label, icon: Icon }) => (
             <button key={id} onClick={() => selectTab(id)} className={navButtonClass(id)}>
-              <Icon size={18} className="mr-3 shrink-0" />
+              {createElement(Icon, { size: 18, className: 'mr-3 shrink-0' })}
               <span className="text-left">{label}</span>
             </button>
           ))}
@@ -603,6 +639,171 @@ const DashboardDGM = () => {
                     </tbody>
                   </table>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'intelligence' && (
+            <div>
+              <div className="mb-5 overflow-hidden rounded-2xl bg-slate-900 text-white shadow-xl">
+                <div className="grid gap-5 p-5 sm:p-7 lg:grid-cols-[1fr_auto] lg:items-center">
+                  <div>
+                    <div className="flex items-center gap-2 text-amber-300">
+                      <Sparkles size={16} />
+                      <p className="text-[10px] font-black uppercase tracking-[0.2em]">Aide à la décision · supervision humaine</p>
+                    </div>
+                    <h2 className="mt-2 text-2xl font-black sm:text-3xl">Cockpit d’intelligence économique</h2>
+                    <p className="mt-2 max-w-3xl text-sm leading-relaxed text-white/60">
+                      Prophet projette les tensions de prix. Isolation Forest fait remonter les comportements atypiques.
+                      AGRILINK-CI recommande une action ; l’autorité habilitée conserve la décision.
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 sm:flex">
+                    {[
+                      ['Prophet', 'Prévision'],
+                      ['Isolation Forest', 'Anomalies'],
+                    ].map(([model, role]) => (
+                      <div key={model} className="rounded-xl border border-white/10 bg-white/5 px-4 py-3">
+                        <p className="text-xs font-black text-white">{model}</p>
+                        <p className="mt-0.5 text-[9px] uppercase tracking-wider text-white/40">{role}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="mb-5 grid gap-5 xl:grid-cols-[1.15fr_0.85fr]">
+                <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-wider text-blue-600">Modèle Prophet</p>
+                      <h3 className="mt-1 flex items-center gap-2 text-lg font-black text-slate-900">
+                        <TrendingUp size={20} className="text-blue-600" />
+                        Prévision des prix
+                      </h3>
+                    </div>
+                    <div className="flex rounded-xl bg-slate-100 p-1">
+                      {['J+7', 'J+30'].map((value) => (
+                        <button
+                          key={value}
+                          type="button"
+                          onClick={() => setHorizon(value)}
+                          className={`rounded-lg px-4 py-2 text-xs font-black transition ${
+                            horizon === value ? 'bg-blue-600 text-white shadow' : 'text-slate-500'
+                          }`}
+                        >
+                          {value}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="mt-5 space-y-3">
+                    {PREDICTIONS_PRIX[horizon].map((prediction) => {
+                      const rising = prediction.prevision >= prediction.actuel;
+                      return (
+                        <div key={prediction.produit} className="grid grid-cols-[1fr_auto] items-center gap-4 rounded-xl bg-slate-50 p-4 sm:grid-cols-[1fr_0.8fr_0.8fr]">
+                          <div>
+                            <p className="font-black text-slate-900">{prediction.produit}</p>
+                            <p className="text-[10px] text-slate-400">Confiance modèle · {prediction.confiance} %</p>
+                          </div>
+                          <div className="hidden sm:block">
+                            <p className="text-[9px] font-bold uppercase text-slate-400">Actuel</p>
+                            <p className="text-sm font-bold text-slate-600">{prediction.actuel.toLocaleString('fr-FR')} F/t</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-[9px] font-bold uppercase text-slate-400">Prévision {horizon}</p>
+                            <p className={`text-sm font-black ${rising ? 'text-red-600' : 'text-green-700'}`}>
+                              {prediction.prevision.toLocaleString('fr-FR')} F/t · {prediction.variation}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </section>
+
+                <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-wider text-orange-600">Isolation Forest</p>
+                    <h3 className="mt-1 flex items-center gap-2 text-lg font-black text-slate-900">
+                      <AlertTriangle size={20} className="text-orange-500" />
+                      Signaux atypiques
+                    </h3>
+                    <p className="mt-1 text-xs text-slate-500">Alertes à instruire — aucune sanction automatique.</p>
+                  </div>
+                  <div className="mt-5 space-y-3">
+                    {ALERTES_ANOMALIES.map((alerte) => (
+                      <div key={alerte.zone} className={`rounded-xl border p-3.5 ${alerte.classe}`}>
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <p className="text-[9px] font-black uppercase tracking-wider">{alerte.niveau}</p>
+                            <p className="mt-1 text-xs font-black">{alerte.zone}</p>
+                            <p className="mt-1 text-[11px]">{alerte.signal}</p>
+                          </div>
+                          <span className="rounded-lg bg-white/70 px-2 py-1 font-mono text-[9px] font-bold">score {alerte.score}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              </div>
+
+              <div className="grid gap-5 xl:grid-cols-[1.3fr_0.7fr]">
+                <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-wider text-green-700">Heat Map nationale</p>
+                      <h3 className="mt-1 flex items-center gap-2 text-lg font-black text-slate-900">
+                        <Map size={20} className="text-green-600" />
+                        Indice d’Abondance Régionale
+                      </h3>
+                    </div>
+                    <p className="text-[10px] font-semibold text-slate-400">Indice 0 = rupture · 100 = fort surplus</p>
+                  </div>
+                  <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    {INDICES_ABONDANCE.map((zone) => (
+                      <div key={zone.region} className={`relative overflow-hidden rounded-2xl p-4 ${zone.classe}`}>
+                        <div className="absolute -right-5 -top-8 text-7xl font-black opacity-10">{zone.indice}</div>
+                        <p className="relative text-xs font-black">{zone.region}</p>
+                        <p className="relative mt-0.5 text-[10px] opacity-75">{zone.produit}</p>
+                        <div className="relative mt-5 flex items-end justify-between">
+                          <span className="text-3xl font-black">{zone.indice}</span>
+                          <span className="rounded-full bg-white/20 px-2 py-1 text-[9px] font-black">{zone.statut}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+
+                <section className="rounded-2xl border border-blue-200 bg-blue-50 p-5 shadow-sm sm:p-6">
+                  <div className="flex items-center gap-2 text-blue-800">
+                    <BrainCircuit size={20} />
+                    <h3 className="text-lg font-black">Recommandation État</h3>
+                  </div>
+                  <p className="mt-1 text-xs font-bold uppercase tracking-wider text-blue-500">Scénario proposé · J+30</p>
+                  <div className="my-5 rounded-2xl bg-white p-4 text-sm shadow-sm">
+                    <p className="font-black text-slate-900">Rééquilibrer le corridor Nord → Sud-Est</p>
+                    <p className="mt-2 leading-relaxed text-slate-500">
+                      Orienter <strong className="text-slate-800">180 t d’igname</strong> depuis Gbêkê vers Sud-Comoé pour réduire le risque de rupture estimé.
+                    </p>
+                    <div className="mt-4 flex items-center gap-2 text-xs font-bold text-blue-700">
+                      <MapPin size={14} /> Bouaké → Aboisso
+                    </div>
+                  </div>
+                  <div className="rounded-xl border border-blue-200 bg-blue-100/70 p-3">
+                    <div className="flex items-center gap-2 text-blue-900">
+                      <Scale size={15} />
+                      <p className="text-xs font-black">Coût de revient grossiste</p>
+                    </div>
+                    <p className="mt-2 text-2xl font-black text-blue-950">2 485 F/kg</p>
+                    <p className="text-[10px] text-blue-700">Achat + fret négocié + taxes OCPV</p>
+                  </div>
+                  <button type="button" className="mt-4 w-full rounded-xl bg-blue-700 py-3 text-xs font-black text-white shadow-sm hover:bg-blue-800">
+                    Soumettre au comité de régulation
+                  </button>
+                  <p className="mt-2 text-center text-[9px] text-blue-600">Validation humaine obligatoire · décision auditée</p>
+                </section>
               </div>
             </div>
           )}

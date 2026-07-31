@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { ReactFlowProvider } from '@xyflow/react';
-import { motion } from 'framer-motion';
+import { motion as Motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Building2, Layers } from 'lucide-react';
 
@@ -51,7 +51,7 @@ function AgrilinkLandingInner() {
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-slate-500 dark:text-white/50 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 border border-transparent hover:border-slate-200 dark:hover:border-white/10 transition-colors"
             >
               <Layers size={13} className="text-orange-500" />
-              <span className="hidden sm:inline">Démo CP/APE v1</span>
+              <span className="hidden sm:inline">Flux global</span>
             </Link>
           </nav>
         </div>
@@ -60,7 +60,7 @@ function AgrilinkLandingInner() {
       <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-[#121212] dark:text-white transition-colors duration-300 pt-[4.5rem]">
       <main className="relative z-10 max-w-7xl mx-auto px-6 pb-16">
         <section className="pt-8 pb-10 text-center">
-          <motion.h1
+          <Motion.h1
             custom={0}
             variants={heroVariants}
             initial="hidden"
@@ -69,9 +69,9 @@ function AgrilinkLandingInner() {
           >
             AGRILINK
             <span className="text-orange-500">-CI</span>
-          </motion.h1>
+          </Motion.h1>
 
-          <motion.p
+          <Motion.p
             custom={1}
             variants={heroVariants}
             initial="hidden"
@@ -81,9 +81,9 @@ function AgrilinkLandingInner() {
             Modernisation des systèmes de commercialisation des produits vivriers&nbsp;:
             plateforme de digitalisation, sécurisation des flux et pilotage stratégique de
             l&apos;OCPV.
-          </motion.p>
+          </Motion.p>
 
-          <motion.div
+          <Motion.div
             custom={2}
             variants={heroVariants}
             initial="hidden"
@@ -93,7 +93,7 @@ function AgrilinkLandingInner() {
             {[
               { label: '3 Bounded Contexts', value: 'Amont · OCPV · Aval', color: 'text-green-600 dark:text-green-500' },
               { label: '31 régions', value: 'Couverture nationale', color: 'text-orange-500' },
-              { label: 'Tiers de confiance', value: 'Régulation & séquestre P2P', color: 'text-slate-700 dark:text-white' },
+              { label: 'Tiers de confiance', value: 'Contrôle & verrou P2P', color: 'text-slate-700 dark:text-white' },
             ].map((stat) => (
               <div
                 key={stat.label}
@@ -103,10 +103,10 @@ function AgrilinkLandingInner() {
                 <p className={`text-xs font-semibold mt-0.5 ${stat.color}`}>{stat.value}</p>
               </div>
             ))}
-          </motion.div>
+          </Motion.div>
         </section>
 
-        <motion.section
+        <Motion.section
           initial={{ opacity: 0, y: 32 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
@@ -119,16 +119,16 @@ function AgrilinkLandingInner() {
           </div>
 
           <FlowCanvas selectedId={selectedId} onNodeSelect={setSelectedId} />
-        </motion.section>
+        </Motion.section>
 
-        <motion.footer
+        <Motion.footer
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.9 }}
           className="mt-12 text-center text-[11px] text-slate-400 dark:text-white/25"
         >
           Office d&apos;Aide à la Commercialisation des Produits Vivriers · CIACEMS Technologies
-        </motion.footer>
+        </Motion.footer>
       </main>
 
       {selectedId && (

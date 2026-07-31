@@ -22,6 +22,7 @@ import {
   ExternalLink,
   CheckCircle2,
   ShieldCheck,
+  Sparkles,
 } from 'lucide-react';
 import logoOcpv from '../../assets/logo_ocpv.png';
 import imgCamion from '../../assets/camion.png';
@@ -116,6 +117,16 @@ function LotCard({ lot, onSelect, compact, favorite, onToggleFavorite }) {
 
 function IntentionScreen({ onBack, onSubmit, initialText }) {
   const [text, setText] = useState(initialText || '');
+  const [voiceState, setVoiceState] = useState('idle');
+
+  const simulateVoiceToJson = () => {
+    if (voiceState === 'listening') return;
+    setVoiceState('listening');
+    setTimeout(() => {
+      setText('Je cherche 5 tonnes de manioc à Bouaké, livrées avant vendredi prochain.');
+      setVoiceState('structured');
+    }, 1400);
+  };
 
   return (
     <div className="flex flex-col h-full min-h-0 bg-slate-50">
@@ -132,9 +143,50 @@ function IntentionScreen({ onBack, onSubmit, initialText }) {
           placeholder="Ex : 5 t de manioc, hub Bouaké, livraison sous 7 jours…"
           className="w-full p-4 rounded-xl border-2 border-slate-200 text-sm focus:border-orange-500 focus:outline-none resize-none"
         />
-        <button type="button" className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-dashed border-slate-300 text-slate-500 text-sm">
-          <Mic size={18} /> Dictée vocale (bientôt)
+        <button
+          type="button"
+          onClick={simulateVoiceToJson}
+          className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl border-2 text-sm font-bold transition ${
+            voiceState === 'listening'
+              ? 'border-red-300 bg-red-50 text-red-600'
+              : voiceState === 'structured'
+                ? 'border-green-300 bg-green-50 text-green-700'
+                : 'border-dashed border-orange-300 bg-orange-50/60 text-orange-700'
+          }`}
+        >
+          <Mic size={18} className={voiceState === 'listening' ? 'animate-pulse' : ''} />
+          {voiceState === 'listening'
+            ? 'Écoute en cours…'
+            : voiceState === 'structured'
+              ? 'Dictée structurée par l’IA'
+              : 'Dicter mon besoin'}
         </button>
+
+        {voiceState === 'structured' && (
+          <div className="overflow-hidden rounded-2xl border border-green-200 bg-white shadow-sm">
+            <div className="flex items-center gap-2 bg-green-50 px-3 py-2">
+              <Sparkles size={14} className="text-green-700" />
+              <p className="text-[10px] font-black uppercase tracking-wider text-green-800">Voice-to-JSON validé</p>
+              <span className="ml-auto rounded-full bg-white px-2 py-0.5 text-[8px] font-bold text-green-700">Confiance 96 %</span>
+            </div>
+            <div className="grid grid-cols-2 gap-px bg-slate-100 text-[10px]">
+              {[
+                ['Produit', 'Manioc'],
+                ['Quantité', '5 tonnes'],
+                ['Zone', 'Bouaké'],
+                ['Échéance', 'Vendredi'],
+              ].map(([label, value]) => (
+                <div key={label} className="bg-white p-2.5">
+                  <p className="font-bold uppercase text-slate-400">{label}</p>
+                  <p className="mt-0.5 font-extrabold text-slate-800">{value}</p>
+                </div>
+              ))}
+            </div>
+            <p className="px-3 py-2 font-mono text-[8px] text-slate-400">
+              intention_achat.json · prêt pour le matchmaking
+            </p>
+          </div>
+        )}
       </div>
       <div className="p-4 bg-white border-t border-slate-100">
         <button
@@ -165,6 +217,15 @@ function CheckoutScreen({ lot, mmRef, setMmRef, onBack, onSubmit }) {
         <p className="text-xs text-slate-500">2 paiements obligatoires · une seule validation</p>
       </div>
       <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-3">
+        <div className="flex items-start gap-2 rounded-xl border border-violet-200 bg-violet-50 p-3">
+          <Clock size={16} className="mt-0.5 shrink-0 text-violet-700" />
+          <div>
+            <p className="text-[10px] font-extrabold text-violet-900">Verrou logique P2P · fenêtre de 24 h</p>
+            <p className="mt-0.5 text-[9px] leading-relaxed text-violet-700">
+              Le lot est réservé pendant la confirmation. L&apos;OCPV vérifie les preuves mais ne détient pas le prix du producteur.
+            </p>
+          </div>
+        </div>
         <div className="flex items-center justify-between rounded-xl bg-slate-900 p-3 text-white">
           <div>
             <p className="text-xs font-bold">{lot.produit} · {lot.qte}</p>
@@ -283,9 +344,9 @@ function PurchaseReceiptScreen({ lot, payment, onDone }) {
   );
 }
 
-export default function BuyerPhoneMockup({ buyerType = 'B2B' }) {
+export default function BuyerPhoneMockup({ buyerType = 'B2B', initialScreen = 'main' }) {
   const [tab, setTab] = useState('catalogue');
-  const [screen, setScreen] = useState('main');
+  const [screen, setScreen] = useState(initialScreen);
   const [subTab, setSubTab] = useState('panier');
   const [toast, setToast] = useState(null);
 

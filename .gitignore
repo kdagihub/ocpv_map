@@ -24,3 +24,4 @@ dist-ssr
 
 docs/*
 docs/**
+!docs/AGRILINK-CI_SOURCE_DE_VERITE_DIR_CAB.md

@@ -62,9 +62,14 @@ export const BOUNDED_CONTEXTS = {
         icon: Smartphone,
         detail: 'Canal dédié aux zones rurales en couverture 2G (*555#).',
       },
+      {
+        title: 'Assistant vocal WhatsApp',
+        icon: Mic,
+        detail: 'Le producteur dicte sa récolte ; l’IA transforme sa voix en déclaration structurée.',
+      },
     ],
     demoLinks: [
-      { label: 'Démo interface Producteur (App + USSD)', path: '/demo-producteur' },
+      { label: 'Démo Producteur (App + WhatsApp IA + USSD)', path: '/demo-producteur?channel=whatsapp' },
     ],
   },
   ocpv: {
@@ -129,8 +134,9 @@ export const BOUNDED_CONTEXTS = {
       {
         title: 'IA de prédiction des prix',
         icon: Brain,
-        detail: 'Modèles prédictifs J+7 / J+30 par produit et par région.',
+        detail: 'Prophet à J+7 / J+30 et Isolation Forest pour les anomalies de prix ou de volumes.',
         group: 'Stratégie',
+        demo: '/dashboard-dgm?tab=intelligence',
       },
     ],
     demoLinks: [

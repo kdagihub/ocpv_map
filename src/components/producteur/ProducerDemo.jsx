@@ -1,15 +1,20 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { ArrowLeft, Smartphone, Phone } from 'lucide-react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { ArrowLeft, MessageCircle, Smartphone, Signal } from 'lucide-react';
 
 import logoOcpv from '../../assets/logo_ocpv.png';
 import ThemeToggle from '../agrilink/ThemeToggle';
 import ProducerPhoneMockup from './ProducerPhoneMockup';
 import UssdMockup from './UssdMockup';
+import WhatsappVoiceMockup from './WhatsappVoiceMockup';
 import ProducerInfoPanel from './ProducerInfoPanel';
 
 export default function ProducerDemo() {
-  const [channel, setChannel] = useState('app');
+  const [searchParams] = useSearchParams();
+  const requestedChannel = searchParams.get('channel');
+  const [channel, setChannel] = useState(
+    ['app', 'whatsapp', 'ussd'].includes(requestedChannel) ? requestedChannel : 'app',
+  );
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-[#121212] dark:text-white transition-colors">
@@ -34,7 +39,7 @@ export default function ProducerDemo() {
         <div className="grid lg:grid-cols-[1fr_1fr] gap-8 lg:gap-10 items-start">
           {/* Colonne mockup — plus large pour le téléphone */}
           <div className="flex flex-col items-center lg:items-center w-full">
-            <div className="flex rounded-xl border border-slate-200 dark:border-white/10 p-1 bg-white dark:bg-[#1a1a1a] mb-6 w-full max-w-sm">
+            <div className="grid grid-cols-3 rounded-xl border border-slate-200 dark:border-white/10 p-1 bg-white dark:bg-[#1a1a1a] mb-6 w-full max-w-md">
               <button
                 type="button"
                 onClick={() => setChannel('app')}
@@ -49,6 +54,18 @@ export default function ProducerDemo() {
               </button>
               <button
                 type="button"
+                onClick={() => setChannel('whatsapp')}
+                className={`flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-[11px] font-semibold transition-colors ${
+                  channel === 'whatsapp'
+                    ? 'bg-[#00a884] text-white'
+                    : 'text-slate-500 dark:text-white/50 hover:bg-slate-50 dark:hover:bg-white/5'
+                }`}
+              >
+                <MessageCircle size={14} />
+                WhatsApp IA
+              </button>
+              <button
+                type="button"
                 onClick={() => setChannel('ussd')}
                 className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-semibold transition-colors ${
                   channel === 'ussd'
@@ -56,17 +73,21 @@ export default function ProducerDemo() {
                     : 'text-slate-500 dark:text-white/50 hover:bg-slate-50 dark:hover:bg-white/5'
                 }`}
               >
-                <Phone size={14} />
-                Numéro vert
+                <Signal size={14} />
+                USSD *555#
               </button>
             </div>
 
-            {channel === 'app' ? <ProducerPhoneMockup /> : <UssdMockup />}
+            {channel === 'app' && <ProducerPhoneMockup />}
+            {channel === 'whatsapp' && <WhatsappVoiceMockup />}
+            {channel === 'ussd' && <UssdMockup />}
 
             <p className="mt-4 text-[10px] text-center text-slate-400 dark:text-white/30 max-w-xs">
               {channel === 'app'
                 ? 'Maquette Flutter · navigation bottom bar · déclaration en 3 étapes'
-                : 'Maquette appel · numéro vert 800 00 00 · déclaration assistée par agent'}
+                : channel === 'whatsapp'
+                  ? 'Assistant WhatsApp · dictée vocale · structuration automatique Voice-to-JSON'
+                  : 'Maquette USSD · téléphone simple · confirmation par SMS structuré'}
             </p>
           </div>
 

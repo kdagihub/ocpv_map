@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Building2, User } from 'lucide-react';
 
 import logoOcpv from '../../assets/logo_ocpv.png';
@@ -8,7 +8,9 @@ import BuyerPhoneMockup from './BuyerPhoneMockup';
 import BuyerInfoPanel from './BuyerInfoPanel';
 
 export default function BuyerDemo() {
+  const [searchParams] = useSearchParams();
   const [buyerType, setBuyerType] = useState('B2B');
+  const initialScreen = searchParams.get('mode') === 'voice' ? 'intention' : 'main';
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-[#121212] dark:text-white transition-colors">
@@ -50,7 +52,7 @@ export default function BuyerDemo() {
               </button>
             </div>
 
-            <BuyerPhoneMockup key={buyerType} buyerType={buyerType} />
+            <BuyerPhoneMockup key={`${buyerType}-${initialScreen}`} buyerType={buyerType} initialScreen={initialScreen} />
 
             <p className="mt-4 text-[10px] text-center text-slate-400 dark:text-white/30 max-w-xs">
               Maquette Flutter · même UI B2B/B2C · docs d&apos;inscription différents

@@ -1,9 +1,7 @@
-import { useState, useEffect } from 'react';
-import { Phone, PhoneOff, User } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { CheckCircle2, MessageSquareText, Phone, RotateCcw, Signal } from 'lucide-react';
 
-const GREEN_NUMBER = '800';
-const GREEN_NUMBER_DISPLAY = '800';
-
+const USSD_CODE = '*555#';
 const KEYPAD = [
   ['1', '2', '3'],
   ['4', '5', '6'],
@@ -11,35 +9,38 @@ const KEYPAD = [
   ['*', '0', '#'],
 ];
 
-const KEY_LABELS = {
-  2: 'ABC',
-  3: 'DEF',
-  4: 'GHI',
-  5: 'JKL',
-  6: 'MNO',
-  7: 'PQRS',
-  8: 'TUV',
-  9: 'WXYZ',
+const MENUS = {
+  home: {
+    title: 'AGRILINK-CI',
+    body: ['1. Déclarer une récolte', '2. Suivre un lot', '3. Consulter les prix', '4. Parler à un agent'],
+    hint: 'Répondez 1, 2, 3 ou 4',
+  },
+  product: {
+    title: 'Choisissez le produit',
+    body: ['1. Igname', '2. Manioc', '3. Banane plantain', '4. Maïs'],
+    hint: 'Répondez 1 à 4',
+  },
+  quantity: {
+    title: 'Quantité disponible',
+    body: ['Saisissez le nombre de tonnes.', 'Exemple : 5'],
+    hint: 'Quantité en tonnes',
+  },
+  confirm: {
+    title: 'Confirmer la déclaration',
+    body: ['Produit : Manioc', 'Quantité : 5 tonnes', 'Hub : Bouaké Centre', '', '1. Confirmer   2. Annuler'],
+    hint: 'Répondez 1 pour confirmer',
+  },
 };
-
-function formatDialDisplay(digits) {
-  const clean = digits.replace(/\D/g, '');
-  if (!clean) return '';
-  const parts = [];
-  for (let i = 0; i < clean.length; i += 1) {
-    if (i > 0 && i % 3 === 0) parts.push(' ');
-    parts.push(clean[i]);
-  }
-  return parts.join('');
-}
 
 function PhoneStatusBar() {
   return (
-    <div className="flex items-center justify-between px-5 pt-2 pb-1 text-[10px] font-semibold text-white bg-slate-900">
+    <div className="flex items-center justify-between bg-slate-950 px-5 pb-1 pt-2 text-[10px] font-semibold text-white">
       <span>09:41</span>
-      <div className="flex items-center gap-1">
-        <span className="w-4 h-2 border border-white rounded-sm relative">
-          <span className="absolute inset-0.5 bg-white rounded-[1px]" style={{ width: '65%' }} />
+      <div className="flex items-center gap-1.5">
+        <span className="text-[8px] font-bold text-green-400">2G</span>
+        <Signal size={12} />
+        <span className="h-2 w-4 rounded-sm border border-white">
+          <span className="block h-full w-2/3 bg-white" />
         </span>
       </div>
     </div>
@@ -48,141 +49,153 @@ function PhoneStatusBar() {
 
 export default function UssdMockup() {
   const [digits, setDigits] = useState('');
-  const [calling, setCalling] = useState(false);
-  const [connected, setConnected] = useState(false);
+  const [screen, setScreen] = useState('dial');
+  const [step, setStep] = useState('home');
+  const [answer, setAnswer] = useState('');
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (!digits && !calling) {
-        setDigits(GREEN_NUMBER);
-      }
-    }, 800);
+      if (!digits && screen === 'dial') setDigits(USSD_CODE);
+    }, 500);
     return () => clearTimeout(timer);
-  }, [digits, calling]);
+  }, [digits, screen]);
 
-  const handleKey = (key) => {
-    if (calling) return;
-    if (key === '#') {
-      setDigits((d) => d.slice(0, -1));
-      return;
-    }
-    if (key === '*') {
-      setDigits('');
-      return;
-    }
-    setDigits((d) => (d.length < 12 ? d + key : d));
+  const handleDialKey = (key) => {
+    if (screen !== 'dial') return;
+    setDigits((value) => (value.length < 12 ? value + key : value));
   };
 
-  const startCall = () => {
-    if (!digits) return;
-    setCalling(true);
-    setTimeout(() => setConnected(true), 2200);
+  const startSession = () => {
+    if (digits !== USSD_CODE) return;
+    setScreen('session');
+    setStep('home');
+    setAnswer('');
   };
 
-  const endCall = () => {
-    setCalling(false);
-    setConnected(false);
+  const nextStep = () => {
+    if (!answer) return;
+    if (step === 'home' && answer === '1') setStep('product');
+    else if (step === 'product' && answer === '2') setStep('quantity');
+    else if (step === 'quantity') setStep('confirm');
+    else if (step === 'confirm' && answer === '1') setScreen('success');
+    setAnswer('');
   };
+
+  const reset = () => {
+    setDigits(USSD_CODE);
+    setScreen('dial');
+    setStep('home');
+    setAnswer('');
+  };
+
+  const menu = MENUS[step];
 
   return (
     <div className="relative mx-auto w-full max-w-[360px]">
-      <div className="rounded-[2.75rem] border-[7px] border-slate-800 bg-slate-800 shadow-2xl overflow-hidden">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-28 h-7 bg-slate-800 rounded-b-2xl z-20" />
-        <div className="bg-slate-900 rounded-[2.25rem] overflow-hidden h-[640px] flex flex-col relative">
+      <div className="overflow-hidden rounded-[2.75rem] border-[7px] border-slate-800 bg-slate-800 shadow-2xl">
+        <div className="absolute left-1/2 top-0 z-20 h-7 w-28 -translate-x-1/2 rounded-b-2xl bg-slate-800" />
+        <div className="relative flex h-[640px] flex-col overflow-hidden rounded-[2.25rem] bg-slate-950">
           <PhoneStatusBar />
 
-          {!calling ? (
+          {screen === 'dial' && (
             <>
-              <div className="px-4 pt-2 pb-1">
-                <p className="text-center text-xs text-slate-400">Composer</p>
+              <div className="px-4 pb-1 pt-4">
+                <p className="text-center text-xs text-slate-400">Code USSD AGRILINK-CI</p>
               </div>
-
-              <div className="flex-1 flex flex-col px-4 min-h-0">
-                <div className="text-center py-6 shrink-0">
-                  <p className="text-3xl font-light text-white tracking-widest min-h-[2.5rem]">
-                    {formatDialDisplay(digits) || ' '}
-                  </p>
-                  <p className="text-sm text-green-400 font-medium mt-2">Numéro vert OCPV</p>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    {digits === GREEN_NUMBER ? 'Ligne gratuite · agents disponibles 7j/7' : 'Appuyez sur le combiné pour appeler'}
-                  </p>
+              <div className="flex min-h-0 flex-1 flex-col px-4">
+                <div className="shrink-0 py-7 text-center">
+                  <p className="min-h-[2.5rem] text-3xl font-light tracking-widest text-white">{digits || ' '}</p>
+                  <p className="mt-2 text-sm font-bold text-green-400">Service agricole sans internet</p>
+                  <p className="mt-1 text-xs text-slate-500">Disponible sur téléphone simple · réseau 2G</p>
                 </div>
-
-                <div className="grid grid-cols-3 gap-3 px-2 flex-1 content-center max-h-[340px]">
+                <div className="grid max-h-[330px] flex-1 grid-cols-3 content-center gap-3 px-2">
                   {KEYPAD.flat().map((key) => (
                     <button
                       key={key}
                       type="button"
-                      onClick={() => handleKey(key)}
-                      className="flex flex-col items-center justify-center h-16 rounded-full bg-slate-800/80 active:bg-slate-700 transition-colors"
+                      onClick={() => handleDialKey(key)}
+                      className="flex h-16 items-center justify-center rounded-full bg-slate-800/80 text-2xl font-light text-white transition active:bg-slate-700"
                     >
-                      <span className="text-2xl font-light text-white">{key}</span>
-                      {KEY_LABELS[key] && (
-                        <span className="text-[8px] text-slate-500 tracking-widest">{KEY_LABELS[key]}</span>
-                      )}
+                      {key}
                     </button>
                   ))}
                 </div>
-
-                <div className="grid grid-cols-3 gap-3 px-2 py-6 shrink-0 items-center">
-                  <div />
+                <div className="grid shrink-0 grid-cols-3 items-center gap-3 px-2 py-6">
+                  <button type="button" onClick={() => setDigits('')} className="text-xs font-bold text-slate-500">Effacer</button>
                   <button
                     type="button"
-                    onClick={startCall}
-                    disabled={!digits}
-                    className="flex items-center justify-center h-16 w-16 mx-auto rounded-full bg-green-500 disabled:bg-green-500/30 active:scale-95 transition-transform shadow-lg shadow-green-500/30"
+                    onClick={startSession}
+                    disabled={digits !== USSD_CODE}
+                    className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-500 shadow-lg shadow-green-500/30 transition active:scale-95 disabled:bg-green-900"
                   >
-                    <Phone size={28} className="text-white" fill="white" />
+                    <Phone size={27} className="text-white" fill="white" />
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => setDigits((d) => d.slice(0, -1))}
-                    className="text-sm text-slate-400 font-medium justify-self-center"
-                  >
-                    Effacer
-                  </button>
+                  <span />
                 </div>
               </div>
             </>
-          ) : (
-            <div className="flex-1 flex flex-col items-center justify-center px-6 text-center">
-              <div className="w-24 h-24 rounded-full bg-green-500/20 flex items-center justify-center mb-6">
-                {connected ? (
-                  <User size={40} className="text-green-400" />
-                ) : (
-                  <Phone size={36} className="text-green-400 animate-pulse" />
-                )}
-              </div>
-              <p className="text-xl font-semibold text-white">
-                {connected ? 'Agent OCPV' : 'Appel en cours…'}
-              </p>
-              <p className="text-green-400 text-lg mt-1 font-medium">{GREEN_NUMBER_DISPLAY}</p>
-              <p className="text-sm text-slate-400 mt-3">
-                {connected
-                  ? 'Bonjour Kouassi, je peux enregistrer votre déclaration de récolte par téléphone.'
-                  : 'Connexion au centre d\'appels OCPV…'}
-              </p>
-              {connected && (
-                <div className="mt-6 p-4 rounded-2xl bg-slate-800/80 w-full text-left text-sm text-slate-300 space-y-1">
-                  <p>• Déclaration de disponibilité</p>
-                  <p>• Suivi de vos lots</p>
-                  <p>• Aide sans smartphone</p>
+          )}
+
+          {screen === 'session' && (
+            <div className="flex flex-1 flex-col bg-slate-100 px-4 py-6">
+              <div className="mt-8 overflow-hidden rounded-2xl bg-white shadow-xl ring-1 ring-slate-200">
+                <div className="border-b border-slate-100 bg-green-700 px-4 py-3 text-white">
+                  <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-green-200">Session *555#</p>
+                  <h2 className="mt-1 text-base font-black">{menu.title}</h2>
                 </div>
-              )}
-              <button
-                type="button"
-                onClick={endCall}
-                className="mt-10 flex items-center justify-center h-16 w-16 rounded-full bg-red-500 active:scale-95 transition-transform shadow-lg shadow-red-500/30"
-              >
-                <PhoneOff size={28} className="text-white" />
+                <div className="min-h-[190px] whitespace-pre-line px-4 py-4 text-sm leading-7 text-slate-800">
+                  {menu.body.map((line, index) => <p key={`${line}-${index}`}>{line || '\u00A0'}</p>)}
+                </div>
+                <div className="border-t border-slate-100 p-3">
+                  <label className="text-[10px] font-bold uppercase text-slate-400">{menu.hint}</label>
+                  <input
+                    autoFocus
+                    value={answer}
+                    onChange={(event) => setAnswer(event.target.value.replace(/\D/g, '').slice(0, 2))}
+                    onKeyDown={(event) => event.key === 'Enter' && nextStep()}
+                    inputMode="numeric"
+                    className="mt-1 w-full rounded-lg border-2 border-slate-200 px-3 py-2.5 text-lg font-black outline-none focus:border-green-600"
+                  />
+                </div>
+                <div className="flex border-t border-slate-100">
+                  <button type="button" onClick={reset} className="flex-1 py-3 text-xs font-bold text-slate-500">Annuler</button>
+                  <button type="button" onClick={nextStep} disabled={!answer} className="flex-1 bg-green-700 py-3 text-xs font-black text-white disabled:bg-slate-300">
+                    Envoyer
+                  </button>
+                </div>
+              </div>
+              <p className="mt-4 text-center text-[10px] leading-relaxed text-slate-500">
+                Les réponses sont structurées et injectées dans le même système AGRILINK-CI.
+              </p>
+            </div>
+          )}
+
+          {screen === 'success' && (
+            <div className="flex flex-1 flex-col items-center justify-center bg-slate-100 px-6 text-center">
+              <span className="grid h-20 w-20 place-items-center rounded-full bg-green-100 text-green-700">
+                <CheckCircle2 size={42} />
+              </span>
+              <h2 className="mt-5 text-xl font-black text-slate-900">Déclaration enregistrée</h2>
+              <p className="mt-2 text-sm leading-relaxed text-slate-500">
+                Votre lot de 5 tonnes de manioc est transmis à l&apos;Antenne OCPV de Bouaké.
+              </p>
+              <div className="mt-6 w-full rounded-2xl border border-blue-200 bg-blue-50 p-4 text-left">
+                <div className="flex items-center gap-2 text-blue-800">
+                  <MessageSquareText size={17} />
+                  <p className="text-xs font-black">SMS de confirmation</p>
+                </div>
+                <p className="mt-2 text-[11px] leading-relaxed text-blue-900">
+                  AGRILINK : déclaration OCPV-BKE-2026-468 reçue. 5 t Manioc · Hub Bouaké. Conservez ce SMS.
+                </p>
+              </div>
+              <button type="button" onClick={reset} className="mt-7 flex items-center gap-2 rounded-xl bg-slate-900 px-5 py-3 text-xs font-bold text-white">
+                <RotateCcw size={14} /> Rejouer le parcours
               </button>
             </div>
           )}
 
-          <div className="px-4 py-3 bg-slate-950/80 border-t border-slate-800 text-center shrink-0">
-            <span className="text-[10px] text-slate-500">
-              Sans smartphone · numéro vert · même backend AGRILINK-CI
-            </span>
+          <div className="shrink-0 border-t border-slate-800 bg-slate-950/90 px-4 py-3 text-center">
+            <span className="text-[10px] text-slate-500">USSD *555# · SMS structuré · aucune donnée mobile requise</span>
           </div>
         </div>
       </div>
